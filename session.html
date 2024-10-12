@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session : ""• Compteur live</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="images/favicon.png" type="image/png">
+
+</head>
+<body id="session-page">
+    <div class="container">
+        <div class="header">
+            <!-- Bouton pour retourner à l'index -->
+            <button id="backButton" onclick="goBack()" class="back-button">
+                <img src="images/home.png" alt="Home" width="30" />
+            </button>
+            <h1 id="session-title" style="display:inline; margin-left: 10px;"></h1>
+            <div class="clock-container">
+                <div id="clock" class="clock"></div>
+            </div>
+        </div>
+
+        <div class="counters">
+            <div class="counter">
+                <h2>Enfants -3ans</h2>
+                <button onclick="increment('moins3')">+1</button>
+                <button onclick="decrement('moins3')">-1</button>
+                <p>Présents: <span id="count-moins3">0</span></p>
+                <p>Entrées: <span id="click-moins3">0</span></p>
+            </div>
+            <div class="counter">
+                <h2>Enfants 3 à 14</h2>
+                <button onclick="increment('age3a14')">+1</button>
+                <button onclick="decrement('age3a14')">-1</button>
+                <p>Présents: <span id="count-age3a14">0</span></p>
+                <p>Entrées: <span id="click-age3a14">0</span></p>
+            </div>
+            <div class="counter">
+                <h2>Ados & Adultes</h2>
+                <button onclick="increment('adulte')">+1</button>
+                <button onclick="decrement('adulte')">-1</button>
+                <p>Présents: <span id="count-adulte">0</span></p>
+                <p>Entrées: <span id="click-adulte">0</span></p>
+            </div>
+        </div>
+
+        <h2>Total Présents: <span id="total">0</span></h2>
+        <button id="exportButton" onclick="exportData()">Exporter les données</button> 
+        
+        <!-- Bouton pour masquer/afficher le graphique -->
+        <button id="toggleChartButton" onclick="toggleChart()">Masquer le graphique</button>
+
+        <!-- Bouton de remise à zéro -->
+        <button id="resetButton" onclick="confirmReset()">Remise à zéro</button>
+    
+        <canvas id="affluenceChart"></canvas>
+
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

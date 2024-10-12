@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessions • Compteur live</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="images/favicon.png" type="image/png">
+
+    
+</head>
+<body>
+    <div class="container">
+        <h1>Liste des Sessions</h1>
+        <input type="text" id="session-name" placeholder="Nom de la session" />
+        <button onclick="createSession()">Créer une Session</button>
+
+        <ul id="existing-sessions"></ul>
+
+        <!-- Popup pour renommer la session -->
+        <div id="renamePopup" class="popup" style="display:none;">
+            <div class="popup-content">
+                <span class="close" onclick="closeRenamePopup()">&times;</span>
+                <h2>Renommer la session</h2>
+                <input type="text" id="new-session-name" placeholder="Nouveau nom de la session" />
+                <button onclick="renameSession()">Valider</button>
+            </div>
+        </div>
+    </div>
+    <p class="credit">Site créé par Glenn</p>
+
+    <script src="script.js"></script>
+</body>
+</html>
