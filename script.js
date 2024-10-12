@@ -248,11 +248,18 @@ function renderChart(sessionHistory = []) {
         chart.destroy(); // Destroy the existing chart instance
     }
 
+    // Get the start time from the first entry
+    const startTime = sessionHistory.length > 0 ? new Date(sessionHistory[0].timestamp) : new Date();
+
     // Create a new chart instance
     chart = new Chart(ctx, {
         type: 'line', // Type de graphique en ligne
         data: {
-            labels: sessionHistory.length > 0 ? sessionHistory.map(entry => formatTime(new Date(entry.timestamp))) : [], // Horodatages formatés
+            labels: sessionHistory.length > 0 ? sessionHistory.map(entry => {
+                const currentTime = new Date(entry.timestamp);
+                const minutesElapsed = Math.floor((currentTime - startTime) / (1000 * 60)); // Calculer les minutes écoulées
+                return minutesElapsed;
+            }) : [], // Minutes écoulées
             datasets: [{
                 label: 'Total des présents',
                 data: sessionHistory.length > 0 ? sessionHistory.map(item => item.total) : [], // Total des personnes présentes
@@ -265,12 +272,47 @@ function renderChart(sessionHistory = []) {
         options: {
             scales: {
                 y: {
-                    beginAtZero: true
-                },
-                x: {
+                    beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Temps'
+                        text: 'Total des présents'
+                    },
+                    ticks: {
+                        stepSize: 1, // Forcer une graduation par pas de 1
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : null; // Afficher seulement les valeurs entières
+                        }
+                    }
+                },
+                x: {
+                    beginAtZero: true,
+                    type: 'linear', // Assurez-vous que l'axe X est linéaire
+                    position: 'bottom',
+                    display: false, // Masquer l'axe X
+                    title: {
+                        display: true,
+                        text: 'Minutes écoulées depuis t0'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            // Tooltip item contains the data index, use that to retrieve the original timestamp
+                            const dataIndex = tooltipItem.dataIndex;
+                            const currentEntry = sessionHistory[dataIndex];
+                            
+                            // Convert timestamp to HH:MM:SS format
+                            const date = new Date(currentEntry.timestamp);
+                            const hours = date.getHours().toString().padStart(2, '0');
+                            const minutes = date.getMinutes().toString().padStart(2, '0');
+                            const seconds = date.getSeconds().toString().padStart(2, '0');
+                            const timeString = `${hours}:${minutes}:${seconds}`;
+                            
+                            // Return formatted label
+                            return `Heure: ${timeString}, Total présents: ${currentEntry.total}`;
+                        }
                     }
                 }
             }
@@ -281,12 +323,15 @@ function renderChart(sessionHistory = []) {
 
 
 
+
+
+
 function updateChart() {
     const session = JSON.parse(localStorage.getItem('currentSession'));
     const total = session.data.moins3 + session.data.age3a14 + session.data.adulte;
 
-    // Ajouter la nouvelle valeur du total à l'historique de la session
-    session.data.history.push({
+    // Ajouter ou mettre à jour la valeur du total dans l'historique de la session
+    const newEntry = {
         timestamp: new Date().toISOString(),
         moins3: session.data.moins3,
         age3a14: session.data.age3a14,
@@ -297,7 +342,17 @@ function updateChart() {
             age3a14: session.data.clicks.age3a14,
             adulte: session.data.clicks.adulte
         }
-    });
+    };
+
+    // Vérifier si une entrée avec le même timestamp existe déjà
+    const lastEntryIndex = session.data.history.length - 1;
+    if (lastEntryIndex >= 0 && new Date(session.data.history[lastEntryIndex].timestamp).getTime() === new Date(newEntry.timestamp).getTime()) {
+        // Si une entrée avec le même timestamp existe, la remplacer
+        session.data.history[lastEntryIndex] = newEntry;
+    } else {
+        // Sinon, ajouter la nouvelle entrée
+        session.data.history.push(newEntry);
+    }
 
     // Sauvegarder la session mise à jour dans le localStorage
     saveCurrentSession(session.data);
@@ -307,11 +362,30 @@ function updateChart() {
 }
 
 function updateChartData(history) {
+    const startTime = new Date(history[0].timestamp); // Timestamp de la première entrée
+
+    // Calculer les minutes écoulées et mettre à jour les données du graphique
     chart.data.labels = history.map(entry => {
-        const date = new Date(entry.timestamp);
-        return formatTime(date); // Utiliser votre fonction de formatage de l'heure
+        const currentTime = new Date(entry.timestamp);
+        const minutesElapsed = Math.floor((currentTime - startTime) / (1000 * 60)); // Minutes écoulées depuis t0
+        return minutesElapsed; // Utiliser les minutes comme étiquettes
     });
-    chart.data.datasets[0].data = history.map(entry => entry.total);
+
+    // Filtrer l'historique pour n'afficher que le point le plus récent par minute
+    const filteredData = [];
+    const seenMinutes = new Set();
+
+    history.forEach(entry => {
+        const entryTime = new Date(entry.timestamp);
+        const minutesKey = `${entryTime.getHours()}:${entryTime.getMinutes()}`;
+
+        if (!seenMinutes.has(minutesKey)) {
+            seenMinutes.add(minutesKey);
+            filteredData.push(entry);
+        }
+    });
+
+    chart.data.datasets[0].data = filteredData.map(entry => entry.total);
     chart.update();
 }
 
