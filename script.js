@@ -324,14 +324,12 @@ function renderChart(sessionHistory = []) {
 
 
 
-
-
 function updateChart() {
     const session = JSON.parse(localStorage.getItem('currentSession'));
     const total = session.data.moins3 + session.data.age3a14 + session.data.adulte;
 
-    // Ajouter ou mettre à jour la valeur du total dans l'historique de la session
-    const newEntry = {
+    // Ajouter la nouvelle valeur du total à l'historique de la session
+    session.data.history.push({
         timestamp: new Date().toISOString(),
         moins3: session.data.moins3,
         age3a14: session.data.age3a14,
@@ -342,17 +340,7 @@ function updateChart() {
             age3a14: session.data.clicks.age3a14,
             adulte: session.data.clicks.adulte
         }
-    };
-
-    // Vérifier si une entrée avec le même timestamp existe déjà
-    const lastEntryIndex = session.data.history.length - 1;
-    if (lastEntryIndex >= 0 && new Date(session.data.history[lastEntryIndex].timestamp).getTime() === new Date(newEntry.timestamp).getTime()) {
-        // Si une entrée avec le même timestamp existe, la remplacer
-        session.data.history[lastEntryIndex] = newEntry;
-    } else {
-        // Sinon, ajouter la nouvelle entrée
-        session.data.history.push(newEntry);
-    }
+    });
 
     // Sauvegarder la session mise à jour dans le localStorage
     saveCurrentSession(session.data);
@@ -370,25 +358,9 @@ function updateChartData(history) {
         const minutesElapsed = Math.floor((currentTime - startTime) / (1000 * 60)); // Minutes écoulées depuis t0
         return minutesElapsed; // Utiliser les minutes comme étiquettes
     });
-
-    // Filtrer l'historique pour n'afficher que le point le plus récent par minute
-    const filteredData = [];
-    const seenMinutes = new Set();
-
-    history.forEach(entry => {
-        const entryTime = new Date(entry.timestamp);
-        const minutesKey = `${entryTime.getHours()}:${entryTime.getMinutes()}`;
-
-        if (!seenMinutes.has(minutesKey)) {
-            seenMinutes.add(minutesKey);
-            filteredData.push(entry);
-        }
-    });
-
-    chart.data.datasets[0].data = filteredData.map(entry => entry.total);
+    chart.data.datasets[0].data = history.map(entry => entry.total);
     chart.update();
 }
-
 
 
 
